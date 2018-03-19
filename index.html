@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Simple Map</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.23/esri/css/esri.css">
+    <style>
+      html, body, #map {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script src="https://js.arcgis.com/3.23/"></script>
+    <script>
+      
+      function btnAction()
+        { 
+          var longitude = parseFloat(document.getElementById("jingdu").value.toString());
+          var latitude = parseFloat(document.getElementById("weidu").value.toString());
+          var type = document.getElementById("type").value;
+          require(["esri/map", "dojo/domReady!"], function(Map) {
+          var map = new Map("map", {
+          basemap: type,  //For full list of pre-defined basemaps, navigate to http://arcg.is/1JVo6Wd
+          center: [longitude, latitude], // longitude, latitude
+          zoom: document.getElementById("zoom").value
+        });
+      }); }
+    </script>
+  </head>
+  <body>
+    <select id="type">
+        <option value="satellite">satellite</option>
+        <option value="hybrid">hybrid</option>
+        <option value="topo">topo</option>
+        <option value="gray">gray</option>
+        <option value="oceans">oceans</option>
+        <option value="osm">osm</option>
+    </select>
+    经度: <input type="text" id="jingdu" value="-122.45">
+    纬度：<input type="text" id="weidu" value="37.75">
+    缩放尺度: <input type="text" id="zoom" value="13">
+    <button type="button" onclick="btnAction()">OK</button>
+    <div id="map"></div>
+    </body>
+</html>

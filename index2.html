@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Simple Map</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.23/esri/css/esri.css">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+        #map {
+            height: 100%;
+            width: 100%;
+            float:left;
+            margin: 0;
+            padding: 0;
+            z-index: 1;
+        }
+        #map2{
+            position: absolute;
+            top: 0px;
+            float:right;
+            width: 100%;
+            height: 100%;
+            border: 1px solid black;
+            z-index: 2;
+        }
+    </style>
+    <script src="https://js.arcgis.com/3.23/"></script>
+    <script>
+      var map;
+      var map2;
+        
+      require(["esri/map", "dojo/domReady!"], function(Map) {
+        
+        
+        map = new Map("map", {
+          basemap: "gray",  //For full list of pre-defined basemaps, navigate to http://arcg.is/1JVo6Wd
+          center: [-122.45, 37.75], // longitude, latitude
+          zoom: 13
+        });
+        
+        map.on("extent-change",function(event){
+          if(map2)
+              {
+                  map2.setExtent(event.extent);
+              }
+        })
+        
+        map2 = new Map("map2", {
+          basemap: "topo",  
+          center: [-122.45, 37.75], // longitude, latitude
+          zoom: 13
+        });
+        
+      });
+      //**********卷帘**********//
+      function clipImage()
+       {
+            console.log(event.clientX);
+            document.getElementById("map2").style.clip="rect(0px,"+event.clientX +"px,1000px,0px)";  
+       }
+    </script>
+  </head>
+
+  <body>
+    <div id="map" onmousemove="clipImage()">
+        <div id="map2"></div>
+      </div>
+    
+  </body>
+</html>

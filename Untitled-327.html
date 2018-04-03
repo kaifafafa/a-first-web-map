@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>  
+<head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+  <title>Basemap gallery</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/3.23/dijit/themes/claro/claro.css">    
+  <link rel="stylesheet" href="https://js.arcgis.com/3.23/esri/css/esri.css">
+    
+  <style> 
+    html, body { height: 100%; margin: 0; padding: 0; }
+    #map
+        {
+            width: 50%;
+            height:100%;
+        }
+    #map2
+        {
+            position: absolute;
+            width: 50%;
+            height:100%;
+            left: 50%;
+            top: 0px;
+        }
+    
+  </style> 
+  
+  <script src="https://js.arcgis.com/3.23/"></script>
+  <script> 
+    var map,map2,demographicsLayer;
+    require([
+      "esri/map", "esri/dijit/BasemapGallery", "esri/arcgis/utils","esri/dijit/Scalebar",
+      "dojo/parser",
+      "esri/geometry/webMercatorUtils","dojo/dom","esri/layers/ArcGISDynamicMapServiceLayer","esri/layers/ImageParameters",
+      "esri/layers/ArcGISImageServiceVectorLayer",
+      "esri/InfoTemplate",
+      "esri/renderers/VectorFieldRenderer",
+      "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/TitlePane",
+      "dojo/domReady!"
+    ], function(
+      Map, BasemapGallery, arcgisUtils,Scalebar,
+      parser,
+      webMercatorUtils,dom, ArcGISDynamicMapServiceLayer,ImageParameters,
+      ArcGISImageServiceVectorLayer,
+      InfoTemplate,
+      VectorFieldRenderer,
+    ) {
+      parser.parse();
+
+      map = new Map("map", {
+        basemap: "oceans",
+        center: [-122.45, 37.75],
+        zoom: 10,
+      });
+      
+      map2 = new Map("map2", {
+          basemap: "gray",  
+          center: [-122.45, 37.75], // longitude, latitude
+          zoom: 10,
+        });
+      var flagV=true,flagI=true; 
+      //**********地图联动**********//
+      map.on("extent-change",function(event){
+            if(flagV){
+                map2.setExtent(event.extent);
+                flagI=false;
+            }
+            else if(!flagV){  
+                    flagV=true;  
+                }  
+        })
+      map2.on("extent-change",function(event){
+            if(flagI){
+                map.setExtent(event.extent);
+                flagV=false;
+            }
+            else if(!flagI){  
+                    flagI=true;  
+                } 
+        })
+      //**********调用组件实现比例尺**********//
+      var scalebar = new Scalebar({
+          map: map,
+          attachTo: "bottom-left",
+          scalebarUnit: "dual"
+        });
+        //**********显示坐标**********//
+         map.on("load", function() {
+
+          map.on("mouse-move", showCoordinates);
+          map.on("mouse-drag", showCoordinates);
+        });
+        function showCoordinates(evt) {
+
+          var mp = webMercatorUtils.webMercatorToGeographic(evt.mapPoint);
+
+          dom.byId("info").innerHTML = "X="+mp.x.toFixed(4) + ", "+"Y=" + mp.y.toFixed(4);
+        }
+        //**********创建专题图**********//
+        var imageParameters = new ImageParameters();
+        imageParameters.format = "jpeg"; //set the image type to PNG24, note default is PNG8.
+
+        //Takes a URL to a non cached map service.
+        demographicsLayer = new ArcGISDynamicMapServiceLayer("https://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Population_World/MapServer", {
+          "opacity" : 0.5,
+          "imageParameters" : imageParameters
+        }); 
+
+        var url = "https://sampleserver6.arcgisonline.com/arcgis/rest/services/ScientificData/NDFD_wind/ImageServer";
+                vectorLayer = new ArcGISImageServiceVectorLayer(url, {
+                rendererStyle: VectorFieldRenderer.STYLE_CLASSIFIED_ARROW
+                });
+
+                //Set the size of the arrows based on wind speed  
+                var sizeInfoVar = {
+                  type: "sizeInfo",
+                  minSize: 3,
+                  maxSize: 100,
+                  minDataValue: 0.04,
+                  maxDataValue: 32
+                };
+                var renderer = new VectorFieldRenderer({
+                  style: VectorFieldRenderer.STYLE_BEAUFORT_KN,
+                  flowRepresentation: VectorFieldRenderer.FLOW_TO
+                });
+                //Apply the size settings to the renderer
+                renderer.setVisualVariables([sizeInfoVar]);
+                vectorLayer.setRenderer(renderer); 
+    });
+    //**********地图比例尺**********//
+    function clipImage()
+    {
+      document.getElementById("_scale").value=map.getScale(); 
+    }
+   //**********动态添加专题图**********//
+   function add_geolayer(){           
+
+                if(document.getElementById("demolayer").checked==true){        
+                    map.addLayer(demographicsLayer);
+                }
+
+                if(document.getElementById("demolayer").checked==false){        
+                    map.removeLayer(demographicsLayer);
+                }      
+        }
+
+        function add_imglayer(){
+                if(document.getElementById("imagelayer").checked==true){        
+                    map.addLayer(vectorLayer);
+                }
+
+                if(document.getElementById("imagelayer").checked==false){        
+                    map.removeLayer(vectorLayer);
+                } 
+        } 
+    //**********切换底图**********//
+    function btnStreets(){ 
+            map.setBasemap("streets");
+          }
+          function btnSatellite(){ 
+            map.setBasemap("satellite");
+          }
+          function btnHybrid(){ 
+            map.setBasemap("hybrid");
+          }
+          function btnTopo(){ 
+            map.setBasemap("topo");
+          }
+          function btnGray(){ 
+            map.setBasemap("gray");
+          }
+          function btnNattGeo(){ 
+            map.setBasemap("national-geographic");
+          }
+          function btnOsm(){ 
+            map.setBasemap("osm");
+          }
+      function btnclipImage(){
+          window.open("index2.html");
+      }
+  </script> 
+</head> 
+
+<body class="claro"> 
+  <div id="map" onmousemove="clipImage()"
+         data-dojo-type="dijit/layout/ContentPane" 
+         data-dojo-props="region:'center'" 
+         style="padding:0;">
+      <div style="position:absolute; right:20px; top:10px; z-Index:999;">
+        <div data-dojo-type="dijit/TitlePane" 
+             data-dojo-props="title:'Switch Basemap', open:true">
+          <div data-dojo-type="dijit/layout/ContentPane" style="width:380px; height:280px; overflow:auto;">
+            <input type="button" value="Streets" onclick="btnStreets()" style="background-image: url(https://js.arcgis.com/3.22/esri/images/basemap/streets.jpg);width:110px;height:110px;"/>
+              <input type="button" value="Satellite" onclick="btnSatellite()" style="background-image: url(https://js.arcgis.com/3.22/esri/images/basemap/satellite.jpg);width:110px;height:110px;"/>
+              <input type="button" value="Hybrid" onclick="btnHybrid()" style="background-image: url(https://js.arcgis.com/3.22/esri/images/basemap/hybrid.jpg);width:110px;height:110px;"/>
+              <input type="button" value="Topo" onclick="btnTopo()" style="background-image: url(https://js.arcgis.com/3.22/esri/images/basemap/topo.jpg);width:110px;height:110px;"/>
+              <input type="button" value="Gray" onclick="btnGray()" style="background-image: url(https://js.arcgis.com/3.22/esri/images/basemap/gray.jpg);width:110px;height:110px;"/>
+              <input type="button" value="Natt Geo" onclick="btnNattGeo()" style="background-image: url(https://js.arcgis.com/3.22/esri/images/basemap/national-geographic.jpg);width:110px;height:110px;"/>
+              <input type="button" value="Osm" onclick="btnOsm()" style="background-image: url(https://js.arcgis.com/3.22/esri/images/basemap/osm.jpg);width:110px;height:110px;"/>
+              <input id="demolayer" type="checkbox" value="Bike" onchange="add_geolayer()"/>DynamicLayer
+              <input id="imagelayer" type="checkbox"  value="Car" onchange="add_imglayer()" />Imagelayer
+          </div>
+        </div>
+      </div>
+     <span id="info" style="position:absolute; left:25px; top:85%;bottom:5px; color:#000;z-index:50;"></span>
+     scale：<input id="_scale" type="text" value="0">
+</div>
+<div id="map2" >
+      <button type="button" onclick="btnclipImage()">clipImage</button>
+    </div>
+</body> 
+
+</html>
